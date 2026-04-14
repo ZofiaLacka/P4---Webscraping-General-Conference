@@ -11,11 +11,10 @@ from sqlalchemy import text
 import matplotlib.pyplot as plot
 
 
-# -------------------------
 # Scripture Dictionary Template
 # All 87 books of LDS Standard Works plus spots for speaker, title, and kicker.
 # We use .copy() inside the loop so each talk starts fresh with counts at zero.
-# -------------------------
+
 standard_works_template = {
     'Speaker_Name': '', 'Talk_Name': '', 'Kicker': '',
     'Matthew': 0, 'Mark': 0, 'Luke': 0, 'John': 0,
@@ -42,10 +41,9 @@ standard_works_template = {
 }
 
 
-# -------------------------
 # Function One (Menu)
 # Displays main menu and returns user choice
-# -------------------------
+
 def menu():
     print("\nMenu")
     print("1. Scrape General Conference Data")
@@ -55,10 +53,9 @@ def menu():
     return input("Enter your choice: ")
 
 
-# -------------------------
 # Function Two (Scrape Data)
 # Scrapes talks and saves them to Postgres
-# -------------------------
+
 def scrape_data(engine):
 
     # Drop table if it already exists so we don't get duplicate data
@@ -124,7 +121,7 @@ def scrape_data(engine):
 
         talk_soup = BeautifulSoup(talk_response.text, "html.parser")
 
-        # --- Get the talk title ---
+        # Get the talk title
         title = talk_soup.find("h1")
         if title is None:
             print(f"  -> Skipping (no title found)")
@@ -141,7 +138,7 @@ def scrape_data(engine):
             print(f"  -> Skipping (Introduction page)")
             continue
 
-        # --- Get the speaker name ---
+        # Get the speaker name
         # Try the most common class name first: "author-name"
         speaker = talk_soup.find("p", class_="author-name")
 
@@ -159,16 +156,16 @@ def scrape_data(engine):
             if speaker_text.startswith("By "):
                 speaker_text = speaker_text[3:]
         else:
-            # If we truly can't find a speaker, save a blank but still save the talk
+            #If we truly can't find a speaker, save a blank but still save the talk
             speaker_text = ""
             print(f"  -> Warning: no speaker found for {title_text}")
 
-        # --- Get the kicker (opening quote before the talk begins) ---
+        # Get the kicker (opening quote before the talk begins)
         # The kicker is a <p> tag with class "kicker"
         kicker = talk_soup.find("p", class_="kicker")
         kicker_text = kicker.text.strip() if kicker else ""
 
-        # --- Create a fresh copy of the scripture dictionary for this talk ---
+        # Create a fresh copy of the scripture dictionary for this talk
         # Using .copy() makes sure each talk starts with all counts reset to zero
         data = standard_works_template.copy()
 
@@ -177,7 +174,7 @@ def scrape_data(engine):
         data["Talk_Name"] = title_text
         data["Kicker"] = kicker_text
 
-        # --- Count scripture references from the footnotes section ---
+        # Count scripture references from the footnotes section
         # References are stored in a <footer> tag with class "notes"
         footnotes = talk_soup.find("footer", attrs={"class": "notes"})
 
@@ -198,19 +195,17 @@ def scrape_data(engine):
     print("\nYou've saved the scraped data to your postgres database.")
 
 
-# -------------------------
 # Function Three (Summary Menu)
 # Displays second menu and returns user choice
-# -------------------------
+
 def summary_menu():
     return input("\nYou selected to see summaries. Enter 1 to see a summary of all talks. Enter 2 to select a specific talk. Enter anything else to exit: ")
 
 
-# -------------------------
 # Function Four (All Talks Summary)
 # Shows a bar chart of scripture references across ALL talks combined
 # Only shows books referenced more than 2 times
-# -------------------------
+
 def show_all_summary(engine):
 
     # Load all data from the database
@@ -233,11 +228,10 @@ def show_all_summary(engine):
     plot.show()
 
 
-# -------------------------
 # Function Five (Single Talk Summary)
 # Lets the user choose one talk by number and see its scripture reference chart
 # Only shows books with at least 1 reference
-# -------------------------
+
 def show_single_talk(engine):
 
     # Load all data from the database
@@ -283,10 +277,9 @@ def show_single_talk(engine):
     plot.show()
 
 
-# -------------------------
 # Main Program
 # Connects to the database and runs the menu loop
-# -------------------------
+
 def main():
 
     # Connect to the is303 Postgres database using your Mac username (no password needed)
